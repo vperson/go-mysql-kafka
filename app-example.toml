@@ -64,7 +64,8 @@ saslEnable = false
 username = "alikafka_post-cn-xxxxxxx"
 # 密码
 password = "xxxxxxxxxxxxxx"
-# ca证书
+# ca证书,阿里云kafka公网接入demo:https://github.com/AliwareMQ/aliware-kafka-demos
+# 帮助文档地址:https://help.aliyun.com/document_detail/99958.html?spm=5176.11065259.1996646101.searchclickresult.5fcc31f8N8MlXQ
 certFile = "ca-cert"
 
 
