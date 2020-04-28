@@ -5,10 +5,15 @@
 
 ##### 工作流程
 1、go-canal监听源数据库的binlog
+
 2、数据库产生binlog,筛选被监听的表
+
 3、解析binlog成json
+
 4、投递到kafka
+
 5、业务可以将kafka的消息投递到任何的下游存储中
+
 ![流程图](img-assets/01.png)
 
 ##### 资源准备
