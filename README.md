@@ -158,7 +158,7 @@ sourceTable = "student_sign_in_copy"
 topic = "student_sign_in_fonzie_copy"
 ```
 
-### 感谢
+### 参考&&感谢
 * [go-mysql-sync](https://github.com/bailaohe/go-mysql-sync)
 * [go-mysql](https://github.com/siddontang/go-mysql)
 
