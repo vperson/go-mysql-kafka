@@ -13,8 +13,6 @@ import (
 	blp "go-mysql-kafka/binlog-payload"
 	"go-mysql-kafka/conf"
 	"io/ioutil"
-	"os"
-	"os/signal"
 	"strconv"
 	"time"
 )
@@ -140,6 +138,7 @@ func (k *Kafka) Parse(e *canal.RowsEvent) ([]interface{}, error) {
 	for _, m := range k.c.Kafka.Producer.TableMapperTopic {
 		if m.SourceTable == e.Table.Name && m.Topic != "" {
 			topic = m.Topic
+			break
 		}
 	}
 
@@ -164,8 +163,7 @@ func (k *Kafka) Parse(e *canal.RowsEvent) ([]interface{}, error) {
 	}...)
 	var message *sarama.ProducerMessage
 	message = &sarama.ProducerMessage{
-		Topic:     topic,
-		Partition: 0,
+		Topic: topic,
 	}
 	message.Headers = hdrs
 	message.Value = sarama.StringEncoder(string(payloadByte))
@@ -188,7 +186,8 @@ func (k *Kafka) Publish(reqs []interface{}) error {
 			// kafka异步写入,谨慎使用,kafka会挂的(´;︵;`)
 			if k.Async == true {
 				k.producerAsync.Input() <- msg
-				go k.asyncSendMessage(msg)
+				//log.Infof("kafka async: %v", msg)
+				//go k.asyncSendMessage()
 			} else {
 				// TODO: 可以优化成批量写入
 				p, offset, err := k.producer.SendMessage(msg)
@@ -213,7 +212,7 @@ func (k *Kafka) SendMessageTest() {
 	// saram对于低版本的kafka的headers不能为空
 	msg.Headers = []sarama.RecordHeader{
 		{
-			Key: []byte("hello"),
+			Key:   []byte("hello"),
 			Value: []byte("world"),
 		},
 	}
@@ -225,33 +224,29 @@ func (k *Kafka) SendMessageTest() {
 	log.Fatalf("sent to partition  %d at offset %d", p, offset)
 }
 
-func (k *Kafka) asyncSendMessage(msg *sarama.ProducerMessage) {
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-
-	doneCh := make(chan struct{})
-	for {
-
-		select {
-		//case k.producerAsync.Input() <- msg:
-		case result := <-k.producerAsync.Successes():
-			if k.c.Debug == true {
-				log.Infof("message: %s sent to partition  %d at offset %d\n", result.Value, result.Partition, result.Offset)
-			}
-			doneCh <- struct{}{}
-		case err := <-k.producerAsync.Errors():
-			log.Errorf("kafka async send message err: %+v", err)
-		case <-signals:
-			doneCh <- struct{}{}
-		}
-	}
-	<-doneCh
-
-	//if k.c.Debug == true {
-	//	log.Infof("kafka async send message ok")
-	//}
-
-}
+//func (k *Kafka) asyncSendMessage() {
+//	signals := make(chan os.Signal, 1)
+//	signal.Notify(signals, os.Interrupt)
+//
+//	doneCh := make(chan struct{})
+//	for {
+//
+//		select {
+//		//case k.producerAsync.Input() <- msg:
+//		case result := <-k.producerAsync.Successes():
+//			if k.c.Debug == true {
+//				log.Infof("message: %s sent to partition  %d at offset %d\n", result.Value, result.Partition, result.Offset)
+//			}
+//			doneCh <- struct{}{}
+//		case err := <-k.producerAsync.Errors():
+//			log.Errorf("kafka async send message err: %+v", err)
+//		case <-signals:
+//			doneCh <- struct{}{}
+//		}
+//	}
+//	<-doneCh
+//
+//}
 
 func (k *Kafka) Close() {
 	var err error

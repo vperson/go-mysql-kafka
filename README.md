@@ -144,8 +144,6 @@ returnSuccesses = true
 returnErrors = true
 # 消息投递失败重试次数
 retryMax = 5
-# 是否开启异步投递
-async = false
 
 # kafka版本低于0.11的版本这里不能为空
 [[kafka.producer.headers]]
@@ -159,7 +157,7 @@ topic = "student_sign_in_fonzie_copy"
 ```
 
 ### 参考&&感谢
-* [go-mysql-sync](https://github.com/bailaohe/go-mysql-sync)
+* [bailaohe](https://github.com/bailaohe)
 * [go-mysql](https://github.com/siddontang/go-mysql)
 
 

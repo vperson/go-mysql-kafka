@@ -138,6 +138,9 @@ func Setup() {
 	// 数据源配置
 	Config.SourceDB.FlushBulkTime = Config.SourceDB.FlushBulkTime * time.Second
 
+	// kafka 异步投递会卡死,目前先不开放
+	Config.Kafka.Producer.Async = false
+
 	//fmt.Printf("%+v", Config)
 }
 
