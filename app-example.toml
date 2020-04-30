@@ -87,8 +87,6 @@ returnSuccesses = true
 returnErrors = true
 # 消息投递失败重试次数
 retryMax = 5
-# 是否开启异步投递
-async = false
 
 
 [[kafka.producer.headers]]
