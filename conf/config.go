@@ -121,8 +121,15 @@ type RuleConfig struct {
 
 var Config = &ConfigSet{}
 
-func Setup() {
-	configPath := "app.toml"
+func init() {
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: true,
+		FullTimestamp: true,
+	})
+}
+
+func Setup(cfg string) {
+	configPath := cfg
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Fatalf("read toml config err: %+v", err)

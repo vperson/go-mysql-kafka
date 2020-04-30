@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  go-mysql-sync-to-kafka:
+    image: go-mysql-kafka
+    extra_hosts:
+      - example.com:10.1.64.243
+    ports:
+      - 8000:8000

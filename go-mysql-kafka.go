@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	log "github.com/sirupsen/logrus"
 	"go-mysql-kafka/conf"
 	"go-mysql-kafka/gkafka"
@@ -13,12 +14,18 @@ import (
 	"syscall"
 )
 
-func init() {
-	conf.Setup()
-	gredis.Setup()
-}
+var cfg = flag.String("cfg", "app.toml", "setting up the configuration file")
 
 func main() {
+	var err error
+	flag.Parse()
+
+	conf.Setup(*cfg)
+	err = gredis.Setup()
+	if err != nil {
+		log.Fatalf("error connecting to redis err: %v", err)
+	}
+
 	c := conf.Config
 
 	// 创建一个信号chan
@@ -57,7 +64,10 @@ func main() {
 	done := make(chan struct{}, 1)
 
 	go func() {
-		sm.Run()
+		err = sm.Run()
+		if err != nil {
+			log.Fatalf("sync manager run err: %v", err)
+		}
 
 		done <- struct{}{}
 		log.Infof("run end")
@@ -68,7 +78,6 @@ func main() {
 	st := &sync_manager.Stat{Sm: sm, C: c}
 	go st.Run()
 
-
 	select {
 	case n := <-sc:
 		log.Infof("receive signal %v, closing", n)
@@ -76,7 +85,6 @@ func main() {
 	case <-sm.Ctx.Done():
 		log.Infof("context is done with %v, closing", sm.Ctx.Err())
 	}
-
 
 	sm.Close()
 	kafkaProducer.Close()
