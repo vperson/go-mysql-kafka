@@ -9,13 +9,13 @@ import (
 )
 
 type ConfigSet struct {
-	Debug    bool      `toml:"debug"`    // 是否开启debug模式
-	Env      string    `toml:"env"`      // 运行环境
-	SourceDB *MysqlSet `toml:"sourceDB"` // 源数据库的配置
-	Http     *HttpSet  `toml:"http"`     // http配置
-	Redis    *RedisSet `toml:"redis"`    // redis配置
-	Mapper   *Mapper   `toml:"mapper"`   // 分表分库匹配规则
-	Kafka    *KafkaSet `toml:"kafka"`
+	Debug    bool     `toml:"debug"`    // 是否开启debug模式
+	Env      string   `toml:"env"`      // 运行环境
+	SourceDB MysqlSet `toml:"sourceDB"` // 源数据库的配置
+	Http     HttpSet  `toml:"http"`     // http配置
+	Redis    RedisSet `toml:"redis"`    // redis配置
+	Mapper   Mapper   `toml:"mapper"`   // 分表分库匹配规则
+	Kafka    KafkaSet `toml:"kafka"`
 }
 
 // 分表分库
@@ -29,9 +29,9 @@ type HttpSet struct {
 }
 
 type KafkaSet struct {
-	Brokers  []string          `toml:"brokers"`
-	Version  string            `toml:"version"` // kafka的版本
-	Producer *KafkaProducerSet `toml:"producer"`
+	Brokers  []string         `toml:"brokers"`
+	Version  string           `toml:"version"` // kafka的版本
+	Producer KafkaProducerSet `toml:"producer"`
 
 	InsecureSkipVerify bool   `toml:"insecureSkipVerify"`
 	SaslEnable         bool   `toml:"saslEnable"`
@@ -41,14 +41,14 @@ type KafkaSet struct {
 }
 
 type KafkaProducerSet struct {
-	RequiredAcks     int                 `toml:"requiredAcks"`
-	ReturnSuccesses  bool                `toml:"returnSuccesses"`
-	ReturnErrors     bool                `toml:"returnErrors"`
-	Async            bool                `toml:"async"`
-	RetryMax         int                 `toml:"retryMax"`
-	Headers          []*KafkaHeader      `toml:"headers"`
-	TableMapperTopic []*KafkaMapperTopic `toml:"mapper"`
-	PartitionerType  string              `toml:"partitionerType"`
+	RequiredAcks     int                `toml:"requiredAcks"`
+	ReturnSuccesses  bool               `toml:"returnSuccesses"`
+	ReturnErrors     bool               `toml:"returnErrors"`
+	Async            bool               `toml:"async"`
+	RetryMax         int                `toml:"retryMax"`
+	Headers          []KafkaHeader      `toml:"headers"`
+	TableMapperTopic []KafkaMapperTopic `toml:"mapper"`
+	PartitionerType  string             `toml:"partitionerType"`
 }
 
 type KafkaMapperTopic struct {
@@ -83,11 +83,13 @@ type MysqlSet struct {
 type RedisSet struct {
 	Host          string        `toml:"host"`
 	Password      string        `toml:"password"`
-	MaxIdle       int           `toml:"maxIdle"`
-	MaxActive     int           `toml:"maxActive"`
+	DB            int           `toml:"db"`
+	PoolSize      int           `toml:"poolSize"`
+	MaxRetries    int           `toml:"maxRetries"`
 	IdleTimeout   time.Duration `toml:"idleTimeout"`
-	BinlogTimeout int           `toml:"binlogTimeout"`
+	DialTimeout   time.Duration `toml:"dialTimeout"`
 	BinlogPrefix  string        `toml:"binlogPrefix"`
+	BinlogTimeout time.Duration `toml:"binlogTimeout"`
 }
 
 type SourceConfig struct {
@@ -138,12 +140,20 @@ func Setup(cfg string) {
 	if _, err := toml.Decode(string(data), &Config); err != nil {
 		log.Fatalf("decode toml config err: %+v", err)
 	}
+	if Config.Debug == true {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	// redis 配置
 	Config.Redis.IdleTimeout = Config.Redis.IdleTimeout * time.Second
 
 	// 数据源配置
 	Config.SourceDB.FlushBulkTime = Config.SourceDB.FlushBulkTime * time.Second
+
+	// redis 时间初始化
+	Config.Redis.IdleTimeout = Config.Redis.IdleTimeout * time.Second
+	Config.Redis.DialTimeout = Config.Redis.DialTimeout * time.Second
+	Config.Redis.BinlogTimeout = Config.Redis.BinlogTimeout * time.Second
 
 	// kafka 异步投递会卡死,目前先不开放
 	Config.Kafka.Producer.Async = false

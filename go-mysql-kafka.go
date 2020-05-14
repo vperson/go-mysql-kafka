@@ -21,10 +21,7 @@ func main() {
 	flag.Parse()
 
 	conf.Setup(*cfg)
-	err = gredis.Setup()
-	if err != nil {
-		log.Fatalf("error connecting to redis err: %v", err)
-	}
+	gredis.Setup()
 
 	c := conf.Config
 

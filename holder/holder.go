@@ -2,20 +2,21 @@ package holder
 
 import (
 	"fmt"
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis"
 	"github.com/pingcap/errors"
 	"github.com/siddontang/go-mysql/mysql"
 	"go-mysql-kafka/conf"
 	"go-mysql-kafka/gredis"
-	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
+
 // 覆盖默认的读取和存储binlog的函数
 
 type PositionHolder struct {
 	// binlog超时时间
-	binlogTimeout int
+	binlogTimeout time.Duration
 	// redis存储前缀
 	prefix string
 	// 一般是环境
@@ -34,7 +35,7 @@ func (p *PositionHolder) Save(pos *mysql.Position) error {
 	key := fmt.Sprintf("%s:%s", p.prefix, p.label)
 	value := fmt.Sprintf("%s:%v", pos.Name, pos.Pos)
 
-	return gredis.Set(key, value, 0)
+	return gredis.Set(key, value, -1)
 
 }
 
@@ -42,13 +43,13 @@ func (p *PositionHolder) Load() (*mysql.Position, error) {
 	var pos mysql.Position
 	key := fmt.Sprintf("%s:%s", p.prefix, p.label)
 	posval, err := gredis.GetString(key)
-	if err == redis.ErrNil {
+	if err == redis.Nil {
 		return nil, nil
 	}
 
 	//posval := string(posvalByte)
-	re := regexp.MustCompile("\"")
-	posval = re.ReplaceAllString(posval, "")
+	//re := regexp.MustCompile("\"")
+	//posval = re.ReplaceAllString(posval, "")
 	toks := strings.Split(posval, ":")
 	if len(toks) == 2 {
 		pos.Name = toks[0]

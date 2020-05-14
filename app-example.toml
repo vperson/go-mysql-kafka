@@ -1,12 +1,12 @@
 debug = true
 env = "dev"
 [sourceDB]
-host = "xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+host = "xxxxxxxxx"
 port = 3306
-username = "root"
-password = "xxxxxxxxxxxxxxxx"
+username = "xxxxxx"
+password = "xxxxxx"
 charset = ""
-# server id like a slave,同时还作为ID生成器
+# server id like a slave,同时还作为ID生成器,生成kafka消息的ID
 serverID = 130
 flavor = "mysql"
 mysqldump = ""
@@ -15,13 +15,11 @@ bulkSize = 128
 flushBulkTime = 200
 skipNoPkTable = false
 skipMasterData = false
-# 文件形式存储binlog位置,一般不建议使用
-dataDir = ""
 
 #
 [[sourceDB.sources]]
-schema = "otam"
-tables = ["student_sign_in_copy"]
+schema = "xxxxx"
+tables = ["xxxxxx"]
 
 #[[sourceDB.sources]]
 #schema = "fonzie"
@@ -38,34 +36,37 @@ statAddr = "127.0.0.1:8000"
 statPath = "/metrics"
 
 [redis]
-host = "xxxxxxxxxxxxxxx:6379"
-password = "xxxxxxxxxxxxxxx"
-maxIdle = 30
-maxActive = 30
-idleTimeout = 200
+host = "127.0.0.1:6379"
+password = "xxxxx"
+
+db = 0
+poolSize = 30
+idleTimeout = 30
+maxRetries = 5
+dialTimeout = 10
+
 # binlog在redis的TTL,目前没有用到这个功能
 binlogTimeout = 900
-binlogPrefix = "CONFIG:xxxxxxxx-mysql-sync"
+binlogPrefix = "xxxxxxx"
 
 # 分表分库做映射
 [mapper]
-schemas = ["xxxxxxxxxxxx"]
+schemas = ["xxxxxx"]
 
 [kafka]
 # kafka地址
-brokers = ["xxxxxxxxxxxx:9093"]
+brokers = ["xxxxxx:9092"]
 # 设置kafka版本
-version = "0.10.2.0"
+version = "2.1.0"
 # 跳过证书可信性检测
 insecureSkipVerify = true
 # 开启ssl访问
 saslEnable = false
 # 用户名
-username = "alikafka_post-cn-xxxxxxx"
+username = "xxxxx"
 # 密码
-password = "xxxxxxxxxxxxxx"
-# ca证书,阿里云kafka公网接入demo:https://github.com/AliwareMQ/aliware-kafka-demos
-# 帮助文档地址:https://help.aliyun.com/document_detail/99958.html?spm=5176.11065259.1996646101.searchclickresult.5fcc31f8N8MlXQ
+password = "xxxxxx"
+# ca证书
 certFile = "ca-cert"
 
 
@@ -89,11 +90,12 @@ returnErrors = true
 retryMax = 5
 
 
+
 [[kafka.producer.headers]]
-key = "xxxxxxxxx"
-value = "xxxxxxxxxxxxxx"
+key = "xxxxxx"
+value = "xxxxxx"
 
 # 默认目标topic是表名,如果要重命名就可以在这里配置对应关系
 [[kafka.producer.mapper]]
-sourceTable = "student_sign_in_copy"
-topic = "student_sign_in_fonzie_copy"
+sourceTable = "xxx"
+topic = "xxxx"

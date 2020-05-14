@@ -195,9 +195,7 @@ func (k *Kafka) Publish(reqs []interface{}) error {
 					return errors.Trace(err)
 				}
 
-				if k.c.Debug == true {
-					log.Infof("sent to partition  %d at offset %d", p, offset)
-				}
+				log.Debugf("sent to partition  %d at offset %d", p, offset)
 			}
 		}
 	}

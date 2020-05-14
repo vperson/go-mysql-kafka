@@ -1,141 +1,103 @@
 package gredis
 
 import (
-	"encoding/json"
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis"
 	log "github.com/sirupsen/logrus"
 	"go-mysql-kafka/conf"
 	"time"
 )
 
-var RedisConn *redis.Pool
+var db *redis.Client
 
-func Setup() error {
-	RedisConn = &redis.Pool{
-		MaxIdle:     conf.Config.Redis.MaxIdle,
-		MaxActive:   conf.Config.Redis.MaxActive,
-		IdleTimeout: conf.Config.Redis.IdleTimeout,
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", conf.Config.Redis.Host)
-			if err != nil {
-				return nil, err
-			}
-			if conf.Config.Redis.Password != "" {
-				if _, err := c.Do("AUTH", conf.Config.Redis.Password); err != nil {
-					c.Close()
-					return nil, err
-				}
-			}
-			return c, err
-		},
-		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			_, err := c.Do("PING")
-			if err != nil {
-				log.Fatalf("redis connect err: %+v", err)
-			}
+func Setup() {
+	config := conf.Config.Redis
+	db = redis.NewClient(&redis.Options{
+		Addr:        config.Host,
+		Password:    config.Password,
+		DB:          config.DB,
+		IdleTimeout: config.IdleTimeout,
+		PoolSize:    config.PoolSize,
+		MaxRetries:  config.MaxRetries,
+	})
 
-			return err
-		},
+	pong, err := db.Ping().Result()
+	if err != nil {
+		log.Fatalf("redis 连接失败 err: %v", err)
 	}
 
-	return nil
+	log.Infof("redis 连接成功: %v", pong)
+
+	go pingLoop()
+}
+
+func pingLoop() {
+	for {
+		_, err := db.Ping().Result()
+		if err != nil {
+			log.Fatalf("redis 连接失败 err: %v", err)
+		}
+
+		time.Sleep(30)
+	}
 }
 
 func Close() {
-	if err := RedisConn.Close(); err != nil {
-		log.Infof("redis close err: %+v", err)
-	} else {
-		log.Infof("redis close")
+	err := db.Close()
+	if err != nil {
+		log.Errorf("close redis err: %v", err)
 	}
 }
 
-// Set a key/value
-func Set(key string, data interface{}, time int) error {
-	conn := RedisConn.Get()
-	defer conn.Close()
-
-	value, err := json.Marshal(data)
+// 在redis插入数据
+func Set(key string, value interface{}, timeout time.Duration) error {
+	t := timeout * time.Second
+	err := db.Set(key, value, t).Err()
 	if err != nil {
 		return err
-	}
-
-	_, err = conn.Do("SET", key, value)
-	if err != nil {
-		return err
-	}
-
-	if time > 0 {
-		_, err = conn.Do("EXPIRE", key, time)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
 }
 
-// Exists check a key
-func Exists(key string) bool {
-	conn := RedisConn.Get()
-	defer conn.Close()
-
-	exists, err := redis.Bool(conn.Do("EXISTS", key))
-	if err != nil {
-		return false
+// 查询redis key是否存在
+func Exist(key string) (exist bool, err error) {
+	_, err = db.Get(key).Result()
+	if err == redis.Nil {
+		return false, nil
+	} else if err != nil {
+		return false, err
 	}
 
-	return exists
+	return true, nil
 }
 
-// Get get a key
-func Get(key string) ([]byte, error) {
-	conn := RedisConn.Get()
-	defer conn.Close()
-
-	reply, err := redis.Bytes(conn.Do("GET", key))
-	if err != nil {
-		return nil, err
-	}
-
-	return reply, nil
+// 获取key
+func Get(key string) (val []byte, err error) {
+	return db.Get(key).Bytes()
 }
 
-func GetString(key string) (string, error) {
-	conn := RedisConn.Get()
-	defer conn.Close()
-
-	reply, err := redis.String(conn.Do("GET", key))
-	if err != nil {
-		return "", err
-	}
-
-	return reply, nil
+// 获取key
+func GetString(key string) (val string, err error) {
+	return db.Get(key).Result()
 }
 
-// Delete delete a kye
-func Delete(key string) (bool, error) {
-	conn := RedisConn.Get()
-	defer conn.Close()
-
-	return redis.Bool(conn.Do("DEL", key))
+// 删除key
+func Delete(key string) error {
+	return db.Del(key).Err()
 }
 
-// LikeDeletes batch delete
-func LikeDeletes(key string) error {
-	conn := RedisConn.Get()
-	defer conn.Close()
-
-	keys, err := redis.Strings(conn.Do("KEYS", "*"+key+"*"))
+// 批量删除
+func LikeDelete(key string) error {
+	keys, err := db.Keys(key).Result()
 	if err != nil {
 		return err
 	}
 
 	for _, key := range keys {
-		_, err = Delete(key)
+		err = Delete(key)
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }

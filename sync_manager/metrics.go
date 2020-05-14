@@ -71,7 +71,6 @@ func (s *Stat) Run() {
 		WriteTimeout: 60 * time.Second,
 	}
 
-
 	log.Infof("http listen : http://%s", s.C.Http.StatAddr)
 	err = srv.Serve(s.l)
 	defer func(err error) {
@@ -119,7 +118,8 @@ func (s *Stat) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	buf.WriteString(fmt.Sprintf("update_num:%d\n", sm.UpdateNum.Get()))
 	buf.WriteString(fmt.Sprintf("delete_num:%d\n", sm.DeleteNum.Get()))
 	buf.WriteString(fmt.Sprintf("sync chan capacity: %d\n", len(sm.syncCh)))
-	buf.WriteString(fmt.Sprintf("-------------------------------------------------------------------------------\n\n"))
+	buf.WriteString(fmt.Sprintf("-------------------------------------------------------------------------------\n"))
+	buf.WriteString(fmt.Sprintf("kafka: %v", sm.c.Kafka.Brokers))
 
 	w.Write(buf.Bytes())
 }
