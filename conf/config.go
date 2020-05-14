@@ -74,7 +74,6 @@ type MysqlSet struct {
 	FlushBulkTime  time.Duration `toml:"flushBulkTime"`
 	SkipNoPkTable  bool          `toml:"skipNoPkTable"`
 	SkipMasterData bool          `toml:"skipMasterData"`
-	DataDir        string        `toml:"dataDir"`
 
 	Sources []SourceConfig `toml:"sources"`
 	//Rules  []*RuleConfig  `toml:"rule"`

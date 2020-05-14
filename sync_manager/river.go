@@ -42,7 +42,7 @@ type SyncManager struct {
 	DeleteNum sync2.AtomicInt64
 }
 
-func NewSyncManager(c *conf.ConfigSet, holder PositionHolder, rowMapper RowMapper, sink Sink, ) (*SyncManager, error) {
+func NewSyncManager(c *conf.ConfigSet, holder PositionHolder, rowMapper RowMapper, sink Sink) (*SyncManager, error) {
 	sm := new(SyncManager)
 
 	sm.c = c
@@ -101,6 +101,9 @@ func (s *SyncManager) newCanal() error {
 	cfg.Dump.DiscardErr = false
 	cfg.Dump.SkipMasterData = s.c.SourceDB.SkipMasterData
 
+	if s.c.SourceDB.DumpExec != "" {
+		cfg.Dump.ExecutionPath = s.c.SourceDB.DumpExec
+	}
 	//cfg.SemiSyncEnabled = false
 
 	for _, s := range s.c.SourceDB.Sources {
