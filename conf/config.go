@@ -74,6 +74,7 @@ type MysqlSet struct {
 	FlushBulkTime  time.Duration `toml:"flushBulkTime"`
 	SkipNoPkTable  bool          `toml:"skipNoPkTable"`
 	SkipMasterData bool          `toml:"skipMasterData"`
+	DataDir        string        `toml:"DataDir"` // 保存binlog到本地文件这个方法没有测试过
 
 	Sources []SourceConfig `toml:"sources"`
 	//Rules  []*RuleConfig  `toml:"rule"`
