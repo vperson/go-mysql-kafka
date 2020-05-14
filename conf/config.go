@@ -148,7 +148,7 @@ func Setup(cfg string) {
 	Config.Redis.IdleTimeout = Config.Redis.IdleTimeout * time.Second
 
 	// 数据源配置
-	Config.SourceDB.FlushBulkTime = Config.SourceDB.FlushBulkTime * time.Second
+	Config.SourceDB.FlushBulkTime = Config.SourceDB.FlushBulkTime * time.Millisecond
 
 	// redis 时间初始化
 	Config.Redis.IdleTimeout = Config.Redis.IdleTimeout * time.Second
