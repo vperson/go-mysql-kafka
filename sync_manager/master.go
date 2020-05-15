@@ -111,7 +111,7 @@ func (m *masterInfo) loadPos() error {
 }
 
 func (m *masterInfo) Save(pos mysql.Position) error {
-	log.Infof("save position %s", pos)
+	log.Infof("save position %+v", pos)
 
 	m.Lock()
 	defer m.Unlock()

@@ -178,11 +178,13 @@ func (s *SyncManager) syncLoop() {
 		case <-ticker.C:
 			needFlush = true
 		case <-s.Ctx.Done():
-			if err := s.master.Save(pos); err != nil {
-				log.Errorf("save sync loop position %s err %v, close sync", pos, err)
-				return
+			if pos.Pos > 0 {
+				if err := s.master.Save(pos); err != nil {
+					log.Errorf("save sync loop position %s err %+v, close sync", pos, err)
+					return
+				}
+				log.Infof("save sync loop position %+v successfully, close sync", pos)
 			}
-			log.Errorf("save sync loop position %s successfully, close sync", pos)
 			return
 		}
 

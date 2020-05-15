@@ -8,16 +8,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"go-mysql-kafka/conf"
-	"net"
 	"net/http"
 	"net/http/pprof"
 	"time"
 )
 
 type Stat struct {
-	C  *conf.ConfigSet
-	Sm *SyncManager
-	l  net.Listener
+	C   *conf.ConfigSet
+	Sm  *SyncManager
+	srv *http.Server
 }
 
 var (
@@ -49,11 +48,11 @@ var (
 
 func (s *Stat) Run() {
 	var err error
-	s.l, err = net.Listen("tcp", s.C.Http.StatAddr)
-	if err != nil {
-		log.Errorf("listen stat addr %s err %v", s.C.Http.StatAddr, err)
-		return
-	}
+	//s.l, err = net.Listen("tcp", s.C.Http.StatAddr)
+	//if err != nil {
+	//	log.Errorf("listen stat addr %s err %v", s.C.Http.StatAddr, err)
+	//	return
+	//}
 	mux := http.NewServeMux()
 	mux.Handle("/stat", s)
 	mux.Handle(s.C.Http.StatPath, promhttp.Handler())
@@ -72,18 +71,25 @@ func (s *Stat) Run() {
 	}
 
 	log.Infof("http listen : http://%s", s.C.Http.StatAddr)
-	err = srv.Serve(s.l)
-	defer func(err error) {
+	err = srv.ListenAndServe()
+	if err != nil {
 		log.Errorf("http listen err : %v", err)
 		s.Sm.cancel()
-	}(err)
+	}
+
 }
 
 // 关闭http
 func (s *Stat) Close() {
-	if s.l != nil {
-		s.l.Close()
+	if s.srv != nil {
+		err := s.srv.Close()
+		if err != nil {
+			log.Errorf("http close err: %v", err)
+			return
+		}
 	}
+
+	log.Infof("http successful close")
 }
 
 func (s *Stat) ServeHTTP(w http.ResponseWriter, r *http.Request) {

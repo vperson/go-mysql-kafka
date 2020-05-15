@@ -32,9 +32,17 @@ func main() {
 		os.Interrupt,
 		syscall.SIGHUP,
 		syscall.SIGINT,
-		syscall.SIGTERM,
 		syscall.SIGQUIT,
-		syscall.SIGKILL)
+		syscall.SIGILL,
+		syscall.SIGTRAP,
+		syscall.SIGABRT,
+		syscall.SIGBUS,
+		syscall.SIGFPE,
+		syscall.SIGKILL,
+		syscall.SIGSEGV,
+		syscall.SIGPIPE,
+		syscall.SIGALRM,
+		syscall.SIGTERM)
 
 	// 初始化存储binlog位置, 这里用的是redis存储
 	positionHolder, err := holder.NewPosition(c)
@@ -86,6 +94,7 @@ func main() {
 	sm.Close()
 	kafkaProducer.Close()
 	gredis.Close()
+	st.Close()
 	<-done
 	log.Infof("sync manager is stop")
 }

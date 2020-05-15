@@ -34,7 +34,7 @@ func pingLoop() {
 	for {
 		_, err := db.Ping().Result()
 		if err != nil {
-			log.Fatalf("redis 连接失败 err: %v", err)
+			log.Errorf("redis 连接失败 err: %v", err)
 		}
 
 		time.Sleep(30)
@@ -45,7 +45,9 @@ func Close() {
 	err := db.Close()
 	if err != nil {
 		log.Errorf("close redis err: %v", err)
+		return
 	}
+	log.Info("close redis is ok")
 }
 
 // 在redis插入数据
